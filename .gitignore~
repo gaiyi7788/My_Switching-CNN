@@ -25,7 +25,7 @@ Repo-specific GitIgnore --------------------------------------------------------
 
 storage.googleapis.com
 runs/*
-# data/*
+data/*
 !data/samples/zidane.jpg
 !data/samples/bus.jpg
 !data/coco.names
