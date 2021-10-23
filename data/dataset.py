@@ -10,12 +10,13 @@ class CrowdDataset(Dataset):
     '''
     crowdDataset
     '''
-    def __init__(self,img_root,gt_dmap_root,gt_downsample=1):
+    def __init__(self,img_root,gt_dmap_root,gt_downsample=1,split_scale=3):
         self.img_root = img_root
         self.gt_dmap_root = gt_dmap_root
         self.gt_downsample = gt_downsample
         self.img_names = os.listdir(img_root)
         self.img_nums = len(self.img_names)
+        self.split_scale = split_scale
         
     def __len__(self):
         return self.img_nums
@@ -33,12 +34,12 @@ class CrowdDataset(Dataset):
             img=img[:,:,np.newaxis]
             img=np.concatenate((img,img,img),2)
         
-        ds_rows=int(img.shape[0]//self.gt_downsample)
-        ds_cols=int(img.shape[1]//self.gt_downsample)
-        img = cv2.resize(img,(ds_cols*self.gt_downsample,ds_rows*self.gt_downsample))
+        ds_rows=int(img.shape[0]//(self.gt_downsample*self.split_scale))
+        ds_cols=int(img.shape[1]//(self.gt_downsample*self.split_scale))
+        img = cv2.resize(img,(ds_cols*self.gt_downsample*self.split_scale,ds_rows*self.gt_downsample*self.split_scale))
         img=img.transpose((2,0,1)) # convert to order (channel,rows,cols)
         gt_dmap = np.load(gt_dmap_path)
-        gt_dmap = cv2.resize(gt_dmap,(ds_cols,ds_rows)) #因为gt_map最后是要和特征图大小相等，只用降采样即可
+        gt_dmap = cv2.resize(gt_dmap,(ds_cols*self.split_scale,ds_rows*self.split_scale)) #因为gt_map最后是要和特征图大小相等，只用降采样即可
         # 目前不是很理解为什么要乘 self.gt_downsample
         gt_dmap=gt_dmap[np.newaxis,:,:]*self.gt_downsample*self.gt_downsample
         img=torch.tensor(img,dtype=torch.float)

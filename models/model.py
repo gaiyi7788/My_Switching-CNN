@@ -35,21 +35,20 @@ class Switch(nn.Module):
         super().__init__()
         self.VGG16 = vgg16_bn(num_classes = 3)
     def forward(self, x):
-        x = F.softmax(self.VGG16(x),dim=1)
-        x = x.detach().numpy()[0]
-        print(x)
-        label = np.where(x==np.max(x))
-        print(label)
-        return label[0][0]    
-    
-class Switching_CNN(nn.Module):
-    def __init__(self, pretrain_flag, pretrain_label):
+        x = self.VGG16(x)
+        return x
+        # x = F.softmax(self.VGG16(x),dim=1)
+        # x = x.detach().numpy()[0]
+        # print(x)
+        # label = np.where(x==np.max(x))
+        # print(label)
+        # return label[0][0]   
+
+class Reg1(nn.Module):
+    def __init__(self):
         super().__init__()
-        self.pretrain_flag = pretrain_flag
-        self.pretrain_label = pretrain_label
-        self.switch = Switch()
         self.maxpool = nn.MaxPool2d(2)
-        self.R1 = nn.Sequential(
+        self.net = nn.Sequential(
             Conv(3,16,9),
             self.maxpool,
             Conv(16,32,7),
@@ -58,7 +57,15 @@ class Switching_CNN(nn.Module):
             Conv(16,8,7),
             Conv(8,1,1)
         )
-        self.R2 = nn.Sequential(
+    def forward(self, x):
+        x = self.net(x)
+        return x
+
+class Reg2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.maxpool = nn.MaxPool2d(2)
+        self.net = nn.Sequential(
             Conv(3,20,7),
             self.maxpool,
             Conv(20,40,5),
@@ -67,7 +74,15 @@ class Switching_CNN(nn.Module):
             Conv(20,10,5),
             Conv(10,1,1)
         )
-        self.R3 = nn.Sequential(
+    def forward(self, x):
+        x = self.net(x)
+        return x
+
+class Reg3(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.maxpool = nn.MaxPool2d(2)
+        self.net = nn.Sequential(
             Conv(3,16,9),
             self.maxpool,
             Conv(16,32,7),
@@ -76,11 +91,20 @@ class Switching_CNN(nn.Module):
             Conv(16,8,7),
             Conv(8,1,1)
         )
+    def forward(self, x):
+        x = self.net(x)
+        return x
+    
+class Switching_CNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.switch = Switch()
+        self.R1 = Reg1()
+        self.R2 = Reg2()
+        self.R3 = Reg3()
         
     def forward(self, x):
         label = self.switch(x)
-        if self.pretrain_flag:
-            label = self.pretrain_label
         if label == 0:
             x = self.R1(x)
             print("R1")
