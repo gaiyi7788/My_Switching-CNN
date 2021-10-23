@@ -56,6 +56,8 @@ R3.eval()
 mae = 0.0
 mse = 0.0
 
+# eval
+
 with torch.no_grad():
     for i,(img,gt_dmap) in enumerate(testloader):
         img = img.to(device)
